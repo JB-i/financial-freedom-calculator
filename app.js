@@ -7,13 +7,6 @@ const SCENARIOS = [
   { key: "aggressive", name: "Very good growth", realReturn: 6.5 }
 ];
 
-const ASSET_REAL_RETURNS = {
-  indianEquity: 5,
-  internationalEquity: 4.5,
-  debt: 1.5,
-  cash: -0.5
-};
-
 const EXPENSE_INFLATION_MAP = {
   housing: "housingInflation",
   healthcare: "healthcareInflation",
@@ -35,16 +28,17 @@ const DEFAULTS = {
   safetyMargin: 20,
   passiveIncomeMonthly: 0,
   withdrawalRate: 3.5,
-  withdrawalTax: 10,
+  taxableWithdrawalShare: 50,
   taxDrag: 0.5,
-  returnTaxMode: "drag",
-  equityStcg: 20,
   equityLtcg: 12.5,
-  equityLtcgExemption: 125000,
+  sp500Tax: 30,
   debtTax: 30,
-  dividendTax: 30,
+  cashTax: 30,
   cess: 4,
-  surcharge: 0,
+  indianEquityReturn: 5,
+  sp500Return: 4.5,
+  debtReturn: 1.5,
+  cashReturn: -0.5,
   expenses: {
     housing: 25000,
     food: 16000,
@@ -124,12 +118,26 @@ function getAllocationTotal(allocation) {
   return Object.values(allocation).reduce((sum, item) => sum + item, 0);
 }
 
-function getMixReturn(allocation) {
+function getMixReturn(allocation, assetReturns) {
   const total = getAllocationTotal(allocation);
   if (total <= 0) return 0;
   return Object.entries(allocation).reduce((sum, [key, value]) => {
-    return sum + (value / total) * (ASSET_REAL_RETURNS[key] || 0);
+    return sum + (value / total) * (assetReturns[key] || 0);
   }, 0);
+}
+
+function getBlendedGainTax(allocation, taxRates) {
+  const total = getAllocationTotal(allocation);
+  if (total <= 0) return 0;
+  const baseTax = Object.entries(allocation).reduce((sum, [key, value]) => {
+    return sum + (value / total) * (taxRates[key] || 0);
+  }, 0);
+  return baseTax * (1 + taxRates.cess);
+}
+
+function getEffectiveWithdrawalTax(allocation, taxRates, taxableWithdrawalShare) {
+  const blendedGainTax = getBlendedGainTax(allocation, taxRates);
+  return Math.min(0.95, Math.max(0, blendedGainTax * taxableWithdrawalShare));
 }
 
 function monthlyRate(annualRealReturn) {
@@ -157,21 +165,31 @@ function futureValueWithPmt(pv, pmt, annualRealReturn, years) {
 }
 
 function effectiveReturn(realReturnPct, state) {
-  if (state.returnTaxMode === "drag") {
-    return Math.max(realReturnPct / 100 - state.taxDrag, -0.99);
-  }
-  return Math.max(realReturnPct / 100, -0.99);
+  return Math.max(realReturnPct / 100 - state.taxDrag, -0.99);
 }
 
-function returnLabel(state) {
-  if (state.returnTaxMode === "drag") return "after yearly tax effect";
-  if (state.returnTaxMode === "afterTax") return "tax already included";
-  return "before tax";
+function returnLabel() {
+  return "after yearly tax effect";
 }
 
 function collectState() {
   const expenses = getExpenseValues();
   const allocation = getAllocationValues();
+  const assetReturns = {
+    indianEquity: num("indianEquityReturn"),
+    internationalEquity: num("sp500Return"),
+    debt: num("debtReturn"),
+    cash: num("cashReturn")
+  };
+  const taxRates = {
+    indianEquity: pct("equityLtcg"),
+    internationalEquity: pct("sp500Tax"),
+    debt: pct("debtTax"),
+    cash: pct("cashTax"),
+    cess: pct("cess")
+  };
+  const taxableWithdrawalShare = pct("taxableWithdrawalShare");
+  const withdrawalTax = getEffectiveWithdrawalTax(allocation, taxRates, taxableWithdrawalShare);
   return {
     currentAge: num("currentAge"),
     targetAge: num("targetAge"),
@@ -186,12 +204,15 @@ function collectState() {
     safetyMargin: pct("safetyMargin"),
     passiveIncomeMonthly: num("passiveIncomeMonthly"),
     withdrawalRate: Math.max(0.001, pct("withdrawalRate")),
-    withdrawalTax: Math.min(0.95, Math.max(0, pct("withdrawalTax"))),
+    withdrawalTax,
+    taxableWithdrawalShare,
+    blendedGainTax: getBlendedGainTax(allocation, taxRates),
     taxDrag: Math.max(0, pct("taxDrag")),
-    returnTaxMode: document.getElementById("returnTaxMode").value,
     housingStatus: document.getElementById("housingStatus").value,
     expenses,
-    allocation
+    allocation,
+    assetReturns,
+    taxRates
   };
 }
 
@@ -243,7 +264,7 @@ function calculateScenarioRows(state, base) {
   const mixScenario = {
     key: "mix",
     name: "Your investment mix",
-    realReturn: getMixReturn(state.allocation)
+    realReturn: getMixReturn(state.allocation, state.assetReturns)
   };
   return [mixScenario, ...SCENARIOS].map((scenario) => {
     const afterTaxRealReturn = effectiveReturn(scenario.realReturn, state);
@@ -317,7 +338,7 @@ function renderScenarioTable(state, rows) {
         <td><strong>${row.name}</strong><br>${alreadyFree}</td>
         <td>${percent(row.realReturn)}</td>
         <td>${percent(row.nominalReturn * 100)}</td>
-        <td>${percent(row.afterTaxRealReturn * 100)}<br><small>${returnLabel(state)}</small></td>
+        <td>${percent(row.afterTaxRealReturn * 100)}<br><small>${returnLabel()}</small></td>
         <td><strong>${currency(row.pmtReal)}</strong></td>
         <td>${currency(row.pmtFinalNominal)}</td>
         <td>${currency(row.projectedReal, true)} today<br><small>${currency(row.projectedNominal, true)} future rupees</small></td>
@@ -329,7 +350,7 @@ function renderScenarioTable(state, rows) {
 function renderMainAnswer(state, rows) {
   const selected = getMixRow(rows);
   document.getElementById("mainMonthlyContribution").textContent = currency(selected.pmtReal);
-  document.getElementById("mainScenarioLabel").textContent = `Based on your investment mix, ${returnLabel(state)}`;
+  document.getElementById("mainScenarioLabel").textContent = `Based on your investment mix, ${returnLabel()}`;
   document.getElementById("finalYearContribution").textContent = currency(selected.pmtFinalNominal);
   document.getElementById("mixReturnDisplay").textContent = `${percent(selected.realReturn)} growth after price rise`;
 
@@ -455,7 +476,7 @@ function drawProjectionChart(state, base, rows) {
 function renderAllocationMessage(state) {
   const total = getAllocationTotal(state.allocation);
   const message = document.getElementById("allocationMessage");
-  const mixReturn = getMixReturn(state.allocation);
+  const mixReturn = getMixReturn(state.allocation, state.assetReturns);
   if (Math.abs(total - 100) > 0.01) {
     message.textContent = `Allocation total is ${percent(total)}. The calculator normalizes it and uses about ${percent(mixReturn)} yearly growth after price rise for "Your investment mix."`;
     message.classList.add("attention");
@@ -463,6 +484,13 @@ function renderAllocationMessage(state) {
     message.textContent = `This mix is used in the main answer. It assumes about ${percent(mixReturn)} yearly growth after price rise, before the tax effect above.`;
     message.classList.remove("attention");
   }
+}
+
+function renderTaxEstimate(state) {
+  const withdrawalTaxDisplay = document.getElementById("withdrawalTaxDisplay");
+  const taxEstimateMessage = document.getElementById("taxEstimateMessage");
+  withdrawalTaxDisplay.value = (state.withdrawalTax * 100).toFixed(1);
+  taxEstimateMessage.textContent = `Estimated blended tax on investment profit: ${percent(state.blendedGainTax * 100)}. Estimated tax on total withdrawal: ${percent(state.withdrawalTax * 100)} because ${percent(state.taxableWithdrawalShare * 100)} of each withdrawal is treated as profit.`;
 }
 
 function recalculate() {
@@ -475,6 +503,7 @@ function recalculate() {
   renderMainAnswer(state, rows);
   renderSensitivityTable(state, base);
   renderAllocationMessage(state);
+  renderTaxEstimate(state);
   drawProjectionChart(state, base, rows);
 }
 

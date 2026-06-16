@@ -102,42 +102,46 @@
         </div>
         <div class="two-column">
           <label>Yearly spending from investments %<input type="number" id="withdrawalRate" min="0.1" step="0.1" value="3.5"></label>
-          <label>Tax on money taken out %<input type="number" id="withdrawalTax" min="0" max="95" step="0.1" value="10"></label>
+          <label>Part of withdrawal that is profit %<input type="number" id="taxableWithdrawalShare" min="0" max="100" step="1" value="50"></label>
           <label>Yearly tax effect while investing %<input type="number" id="taxDrag" min="0" step="0.1" value="0.5"></label>
-          <label>How returns include tax
-            <select id="returnTaxMode">
-              <option value="drag" selected>Reduce returns by the tax effect above</option>
-              <option value="afterTax">Returns already include tax</option>
-              <option value="preTax">Returns do not include tax</option>
-            </select>
-          </label>
+          <label>Estimated tax on withdrawals %<input type="number" id="withdrawalTaxDisplay" readonly value="0"></label>
         </div>
 
         <details class="advanced-panel">
-          <summary>Optional tax details for India</summary>
-          <p class="field-note">These fields are editable because tax rules can change and depend on the exact investment.</p>
+          <summary>Optional India tax assumptions</summary>
+          <p class="field-note">The calculator blends these rates using your investment mix. It taxes only the profit part of each withdrawal, not the full withdrawal.</p>
           <div class="two-column">
-            <label>Equity short-term gains tax %<input type="number" id="equityStcg" min="0" step="0.1" value="20"></label>
-            <label>Equity long-term gains tax %<input type="number" id="equityLtcg" min="0" step="0.1" value="12.5"></label>
-            <label>Equity gains amount ignored<input type="number" id="equityLtcgExemption" min="0" step="1000" value="125000"></label>
-            <label>Debt / fixed income tax %<input type="number" id="debtTax" min="0" step="0.1" value="30"></label>
-            <label>Dividend / income tax %<input type="number" id="dividendTax" min="0" step="0.1" value="30"></label>
-            <label>Cess %<input type="number" id="cess" min="0" step="0.1" value="4"></label>
-            <label>Surcharge %<input type="number" id="surcharge" min="0" step="0.1" value="0"></label>
+            <label>Indian equity gains tax %<input type="number" id="equityLtcg" min="0" step="0.1" value="12.5"></label>
+            <label>S&P 500 / US fund gains tax %<input type="number" id="sp500Tax" min="0" step="0.1" value="30"></label>
+            <label>Debt / FD tax %<input type="number" id="debtTax" min="0" step="0.1" value="30"></label>
+            <label>Cash interest tax %<input type="number" id="cashTax" min="0" step="0.1" value="30"></label>
+            <label>Cess / surcharge added %<input type="number" id="cess" min="0" step="0.1" value="4"></label>
           </div>
+          <p class="field-note" id="taxEstimateMessage"></p>
         </details>
 
         <div class="section-heading spaced">
           <h2>5. Where the Money Is Invested</h2>
-          <span class="hint" title="These percentages now affect the main answer through the 'Your investment mix' return case.">?</span>
+          <span class="hint" title="These percentages affect the main answer through both expected growth and estimated tax.">?</span>
         </div>
         <div class="allocation-grid">
           <label>Indian equity %<input type="number" data-allocation="indianEquity" min="0" step="1" value="55"></label>
-          <label>International equity %<input type="number" data-allocation="internationalEquity" min="0" step="1" value="15"></label>
+          <label>S&P 500 / US index fund %<input type="number" data-allocation="internationalEquity" min="0" step="1" value="15"></label>
           <label>Debt / fixed deposits / bonds %<input type="number" data-allocation="debt" min="0" step="1" value="25"></label>
           <label>Cash %<input type="number" data-allocation="cash" min="0" step="1" value="5"></label>
         </div>
         <p class="field-note" id="allocationMessage"></p>
+
+        <details class="advanced-panel">
+          <summary>Optional growth assumptions</summary>
+          <p class="field-note">These are yearly returns after price rise, before the yearly tax effect above.</p>
+          <div class="two-column">
+            <label>Indian equity growth %<input type="number" id="indianEquityReturn" step="0.1" value="5"></label>
+            <label>S&P 500 / US index growth %<input type="number" id="sp500Return" step="0.1" value="4.5"></label>
+            <label>Debt / FD growth %<input type="number" id="debtReturn" step="0.1" value="1.5"></label>
+            <label>Cash growth %<input type="number" id="cashReturn" step="0.1" value="-0.5"></label>
+          </div>
+        </details>
       </form>
 
       <aside class="panel results-panel">

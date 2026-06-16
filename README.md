@@ -26,7 +26,7 @@ Fill in:
 - Extra cushion
 - Other monthly income you expect later
 - Basic investment and tax assumptions
-- Where the money is invested: Indian equity, international equity, debt, and cash
+- Where the money is invested: Indian equity, S&P 500 / US index fund, debt, and cash
 
 The main answer is:
 
@@ -80,14 +80,33 @@ If this becomes negative, the calculator uses `0`.
 
 ## Tax on Money Taken Out
 
-The calculator lets the user enter a simple tax percentage for money taken out of investments.
+The calculator does not tax the full withdrawal. That would usually be too harsh.
 
-If the user needs `₹12,00,000/year` after tax, and tax on withdrawals is `10%`, the investment must provide more than `₹12,00,000` before tax:
+Instead, it asks what part of each withdrawal is profit. Then it applies a blended tax rate based on the investment mix.
+
+Example:
+
+```text
+Indian equity tax = 12.5%
+S&P 500 / US fund tax = 30%
+Debt / FD tax = 30%
+Cash interest tax = 30%
+Profit part of withdrawal = 50%
+```
+
+If the blended tax on profit comes to `20%`, and only `50%` of the withdrawal is profit:
+
+```text
+Estimated tax on full withdrawal =
+20% × 50%
+= 10%
+```
+
+So if the user needs `₹12,00,000/year` after tax, the investment must provide more than `₹12,00,000` before tax:
 
 ```text
 Yearly amount before tax =
-₹12,00,000 / (1 - 10%)
-= ₹13,33,333
+₹12,00,000 / (1 - estimated withdrawal tax)
 ```
 
 ## Total Money Needed
@@ -124,16 +143,18 @@ If current investments are already enough under a return case, the monthly inves
 
 ## Return Cases
 
-The default answer uses **Your investment mix**. This combines the Indian equity, international equity, debt, and cash percentages entered on the page.
+The default answer uses **Your investment mix**. This combines the Indian equity, S&P 500 / US index fund, debt, and cash percentages entered on the page.
 
 The built-in assumptions for yearly growth after price rise are:
 
 - Indian equity: `5%`
-- International equity: `4.5%`
+- S&P 500 / US index fund: `4.5%`
 - Debt / fixed income: `1.5%`
 - Cash: `-0.5%`
 
-Example: if the user enters more equity and less cash, the estimated growth usually goes up and the monthly investment needed usually goes down. If the user enters more cash and debt, the estimated growth usually goes down and the monthly investment needed usually goes up.
+Example: if the user enters more Indian equity or S&P 500 and less cash, the estimated growth usually goes up and the monthly investment needed usually goes down. If the user enters more cash and debt, the estimated growth usually goes down and the monthly investment needed usually goes up.
+
+These growth assumptions are editable in the optional growth section.
 
 The page also shows fixed return cases for comparison.
 
@@ -152,17 +173,19 @@ The calculator also shows the same return in future-rupee terms by adding expect
 
 The tax fields are editable because tax depends on the exact investment and the rules can change.
 
-The app includes fields for:
+The app includes practical fields for:
 
-- Equity short-term gains tax
-- Equity long-term gains tax
-- Equity gains amount ignored
-- Debt / fixed income tax
-- Dividend / income tax
-- Cess
-- Surcharge
+- Indian equity gains tax
+- S&P 500 / US fund gains tax
+- Debt / FD tax
+- Cash interest tax
+- Cess / surcharge added
+- Profit part of each withdrawal
 - Yearly tax effect while investing
-- Tax on money taken out
+
+The calculator blends the tax rates using the investment mix. For example, a 100% Indian equity mix uses the Indian equity tax assumption; a 100% S&P 500 mix uses the S&P 500 / US fund tax assumption.
+
+For India, the defaults are intentionally editable because investment tax depends on the exact product. Listed Indian equity/equity mutual funds, overseas index funds, debt funds, fixed deposits, and direct foreign assets can be taxed differently.
 
 For West Bengal, professional tax usually matters for salary, business, professional, or self-employment income. This calculator keeps it separate from investment withdrawals.
 
