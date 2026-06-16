@@ -7,6 +7,13 @@ const SCENARIOS = [
   { key: "aggressive", name: "Very good growth", realReturn: 6.5 }
 ];
 
+const ASSET_REAL_RETURNS = {
+  indianEquity: 5,
+  internationalEquity: 4.5,
+  debt: 1.5,
+  cash: -0.5
+};
+
 const EXPENSE_INFLATION_MAP = {
   housing: "housingInflation",
   healthcare: "healthcareInflation",
@@ -112,6 +119,18 @@ function getAllocationValues() {
     allocation[input.dataset.allocation] = Number(input.value) || 0;
   });
   return allocation;
+}
+
+function getAllocationTotal(allocation) {
+  return Object.values(allocation).reduce((sum, item) => sum + item, 0);
+}
+
+function getMixReturn(allocation) {
+  const total = getAllocationTotal(allocation);
+  if (total <= 0) return 0;
+  return Object.entries(allocation).reduce((sum, [key, value]) => {
+    return sum + (value / total) * (ASSET_REAL_RETURNS[key] || 0);
+  }, 0);
 }
 
 function monthlyRate(annualRealReturn) {
@@ -222,7 +241,12 @@ function calculateBase(state, withdrawalRateOverride) {
 }
 
 function calculateScenarioRows(state, base) {
-  return SCENARIOS.map((scenario) => {
+  const mixScenario = {
+    key: "mix",
+    name: "Your investment mix",
+    realReturn: getMixReturn(state.allocation)
+  };
+  return [mixScenario, ...SCENARIOS].map((scenario) => {
     const afterTaxRealReturn = effectiveReturn(scenario.realReturn, state);
     const nominalReturn = (1 + scenario.realReturn / 100) * (1 + state.generalInflation) - 1;
     const pmtReal = requiredMonthlyContribution(
@@ -300,8 +324,8 @@ function renderScenarioTable(state, rows) {
 }
 
 function renderMainAnswer(state, rows) {
-  const selectedKey = chartScenarioSelect.value || "balanced";
-  const selected = rows.find((row) => row.key === selectedKey) || rows[3];
+  const selectedKey = chartScenarioSelect.value || "mix";
+  const selected = rows.find((row) => row.key === selectedKey) || rows[0];
   document.getElementById("mainMonthlyContribution").textContent = currency(selected.pmtReal);
   document.getElementById("mainScenarioLabel").textContent = `${selected.name} scenario, ${returnLabel(state)}`;
   document.getElementById("finalYearContribution").textContent = currency(selected.pmtFinalNominal);
@@ -336,7 +360,7 @@ function renderSensitivityTable(state, base) {
 }
 
 function drawProjectionChart(state, base, rows) {
-  const selected = rows.find((row) => row.key === chartScenarioSelect.value) || rows[3];
+  const selected = rows.find((row) => row.key === chartScenarioSelect.value) || rows[0];
   const canvas = chartCanvas;
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
@@ -426,13 +450,14 @@ function drawProjectionChart(state, base, rows) {
 }
 
 function renderAllocationMessage(state) {
-  const total = Object.values(state.allocation).reduce((sum, item) => sum + item, 0);
+  const total = getAllocationTotal(state.allocation);
   const message = document.getElementById("allocationMessage");
+  const mixReturn = getMixReturn(state.allocation);
   if (Math.abs(total - 100) > 0.01) {
-    message.textContent = `Allocation total is ${percent(total)}. Make it 100% for a cleaner planning assumption.`;
+    message.textContent = `Allocation total is ${percent(total)}. The calculator normalizes it and uses about ${percent(mixReturn)} yearly growth after price rise for "Your investment mix."`;
     message.classList.add("attention");
   } else {
-    message.textContent = "Allocation totals 100%. Match the return case to this risk mix.";
+    message.textContent = `This mix is used in the main answer. It assumes about ${percent(mixReturn)} yearly growth after price rise, before the tax effect above.`;
     message.classList.remove("attention");
   }
 }
@@ -479,14 +504,16 @@ function setDefaults() {
   Object.entries(DEFAULTS.allocation).forEach(([key, value]) => {
     document.querySelector(`[data-allocation="${key}"]`).value = value;
   });
+  chartScenarioSelect.value = "mix";
   lastEditedAgeField = "targetAge";
   syncAgeFields("targetAge");
   recalculate();
 }
 
 function initScenarioSelect() {
-  chartScenarioSelect.innerHTML = SCENARIOS.map((scenario) => {
-    const selected = scenario.key === "balanced" ? "selected" : "";
+  const options = [{ key: "mix", name: "Your investment mix" }, ...SCENARIOS];
+  chartScenarioSelect.innerHTML = options.map((scenario) => {
+    const selected = scenario.key === "mix" ? "selected" : "";
     return `<option value="${scenario.key}" ${selected}>${scenario.name}</option>`;
   }).join("");
 }
