@@ -12,7 +12,7 @@ Open `index.html` in a browser.
 
 Enter everything in today's rupees.
 
-For example, if the life you want costs `₹80,000/month` today, enter `80000`. Do not try to guess what that life will cost 20 years from now. The calculator handles future price increases.
+For example, if the life you want costs `₹52,000/month` today, enter `52000`. Do not try to guess what that life will cost 20 years from now. The calculator handles future price increases.
 
 Fill in:
 
