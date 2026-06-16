@@ -66,7 +66,6 @@ const DEFAULTS = {
 };
 
 const form = document.getElementById("calculator-form");
-const chartScenarioSelect = document.getElementById("chartScenario");
 const chartCanvas = document.getElementById("projectionChart");
 let lastEditedAgeField = "targetAge";
 
@@ -276,6 +275,10 @@ function calculateScenarioRows(state, base) {
   });
 }
 
+function getMixRow(rows) {
+  return rows.find((row) => row.key === "mix") || rows[0];
+}
+
 function renderDefinitionList(id, rows) {
   const container = document.getElementById(id);
   container.innerHTML = rows.map(([label, value]) => `<dt>${label}</dt><dd>${value}</dd>`).join("");
@@ -324,11 +327,11 @@ function renderScenarioTable(state, rows) {
 }
 
 function renderMainAnswer(state, rows) {
-  const selectedKey = chartScenarioSelect.value || "mix";
-  const selected = rows.find((row) => row.key === selectedKey) || rows[0];
+  const selected = getMixRow(rows);
   document.getElementById("mainMonthlyContribution").textContent = currency(selected.pmtReal);
-  document.getElementById("mainScenarioLabel").textContent = `${selected.name} scenario, ${returnLabel(state)}`;
+  document.getElementById("mainScenarioLabel").textContent = `Based on your investment mix, ${returnLabel(state)}`;
   document.getElementById("finalYearContribution").textContent = currency(selected.pmtFinalNominal);
+  document.getElementById("mixReturnDisplay").textContent = `${percent(selected.realReturn)} growth after price rise`;
 
   const yearOne = selected.pmtReal * Math.pow(1 + state.generalInflation, 1);
   const halfway = selected.pmtReal * Math.pow(1 + state.generalInflation, state.yearsToTarget / 2);
@@ -360,7 +363,7 @@ function renderSensitivityTable(state, base) {
 }
 
 function drawProjectionChart(state, base, rows) {
-  const selected = rows.find((row) => row.key === chartScenarioSelect.value) || rows[0];
+  const selected = getMixRow(rows);
   const canvas = chartCanvas;
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
@@ -504,18 +507,9 @@ function setDefaults() {
   Object.entries(DEFAULTS.allocation).forEach(([key, value]) => {
     document.querySelector(`[data-allocation="${key}"]`).value = value;
   });
-  chartScenarioSelect.value = "mix";
   lastEditedAgeField = "targetAge";
   syncAgeFields("targetAge");
   recalculate();
-}
-
-function initScenarioSelect() {
-  const options = [{ key: "mix", name: "Your investment mix" }, ...SCENARIOS];
-  chartScenarioSelect.innerHTML = options.map((scenario) => {
-    const selected = scenario.key === "mix" ? "selected" : "";
-    return `<option value="${scenario.key}" ${selected}>${scenario.name}</option>`;
-  }).join("");
 }
 
 form.addEventListener("input", (event) => {
@@ -526,9 +520,7 @@ form.addEventListener("input", (event) => {
 });
 
 form.addEventListener("change", recalculate);
-chartScenarioSelect.addEventListener("change", recalculate);
 document.getElementById("reset-defaults").addEventListener("click", setDefaults);
 window.addEventListener("resize", recalculate);
 
-initScenarioSelect();
 setDefaults();
