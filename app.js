@@ -1,10 +1,10 @@
 const SCENARIOS = [
-  { key: "stress", name: "Bad years", realReturn: -1 },
-  { key: "veryConservative", name: "Very low growth", realReturn: 1 },
-  { key: "conservative", name: "Low growth", realReturn: 2 },
-  { key: "balanced", name: "Middle growth", realReturn: 3.5 },
-  { key: "growth", name: "Good growth", realReturn: 5 },
-  { key: "aggressive", name: "Very good growth", realReturn: 6.5 }
+  { key: "stress", name: "Bad years", nominalReturn: 2 },
+  { key: "veryConservative", name: "Very low growth", nominalReturn: 4 },
+  { key: "conservative", name: "Low growth", nominalReturn: 5.5 },
+  { key: "balanced", name: "Middle growth", nominalReturn: 7 },
+  { key: "growth", name: "Good growth", nominalReturn: 8.5 },
+  { key: "aggressive", name: "Very good growth", nominalReturn: 10 }
 ];
 
 const EXPENSE_INFLATION_MAP = {
@@ -18,13 +18,14 @@ const DEFAULTS = {
   targetAge: 45,
   yearsToTarget: 20,
   housingStatus: "rented",
-  currentAssets: 200000,
-  emergencyFund: 150000,
-  annualLargeExpenses: 100000,
+  currentAssets: 2500,
+  emergencyFund: 1800,
+  annualLargeExpenses: 1200,
   generalInflation: 6,
   housingInflation: 6.5,
   healthcareInflation: 8,
   educationInflation: 8,
+  inrDepreciation: 3,
   safetyMargin: 20,
   passiveIncomeMonthly: 0,
   withdrawalRate: 3.5,
@@ -35,21 +36,21 @@ const DEFAULTS = {
   debtTax: 30,
   cashTax: 30,
   cess: 4,
-  indianEquityReturn: 5,
-  sp500Return: 4.5,
-  debtReturn: 1.5,
-  cashReturn: -0.5,
+  indianEquityReturn: 9,
+  sp500Return: 8,
+  debtReturn: 5,
+  cashReturn: 2,
   expenses: {
-    housing: 15000,
-    food: 12000,
-    utilities: 3500,
-    transport: 3000,
-    healthcare: 4000,
-    family: 4000,
-    education: 2000,
-    travel: 3000,
-    entertainment: 2000,
-    misc: 3500
+    housing: 180,
+    food: 145,
+    utilities: 42,
+    transport: 36,
+    healthcare: 48,
+    family: 48,
+    education: 24,
+    travel: 36,
+    entertainment: 24,
+    misc: 42
   },
   allocation: {
     indianEquity: 55,
@@ -74,25 +75,25 @@ function pct(id) {
 
 function currency(value, compact = false) {
   const safe = Number.isFinite(value) ? value : 0;
-  if (compact && Math.abs(safe) >= 10000000) {
-    return `₹${(safe / 10000000).toLocaleString("en-IN", {
-      maximumFractionDigits: safe >= 100000000 ? 1 : 2
-    })} crore`;
+  if (compact && Math.abs(safe) >= 1000000) {
+    return `$${(safe / 1000000).toLocaleString("en-US", {
+      maximumFractionDigits: safe >= 10000000 ? 1 : 2
+    })}M`;
   }
-  if (compact && Math.abs(safe) >= 100000) {
-    return `₹${(safe / 100000).toLocaleString("en-IN", {
-      maximumFractionDigits: safe >= 1000000 ? 1 : 2
-    })} lakh`;
+  if (compact && Math.abs(safe) >= 1000) {
+    return `$${(safe / 1000).toLocaleString("en-US", {
+      maximumFractionDigits: safe >= 100000 ? 0 : 1
+    })}k`;
   }
-  return new Intl.NumberFormat("en-IN", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "INR",
+    currency: "USD",
     maximumFractionDigits: 0
   }).format(Math.round(safe));
 }
 
 function percent(value) {
-  return `${Number(value).toLocaleString("en-IN", {
+  return `${Number(value).toLocaleString("en-US", {
     minimumFractionDigits: Math.abs(value) < 10 && value % 1 !== 0 ? 1 : 0,
     maximumFractionDigits: 2
   })}%`;
@@ -118,12 +119,20 @@ function getAllocationTotal(allocation) {
   return Object.values(allocation).reduce((sum, item) => sum + item, 0);
 }
 
-function getMixReturn(allocation, assetReturns) {
+function getMixNominalReturn(allocation, assetReturns) {
   const total = getAllocationTotal(allocation);
   if (total <= 0) return 0;
   return Object.entries(allocation).reduce((sum, [key, value]) => {
     return sum + (value / total) * (assetReturns[key] || 0);
   }, 0);
+}
+
+function usdLifestyleInflation(inrInflation, inrDepreciation) {
+  return ((1 + inrInflation) / (1 + inrDepreciation)) - 1;
+}
+
+function realReturnFromNominal(nominalReturnPct, lifestyleInflation) {
+  return ((1 + nominalReturnPct / 100) / (1 + lifestyleInflation)) - 1;
 }
 
 function getBlendedGainTax(allocation, taxRates) {
@@ -201,6 +210,7 @@ function collectState() {
     housingInflation: pct("housingInflation"),
     healthcareInflation: pct("healthcareInflation"),
     educationInflation: pct("educationInflation"),
+    inrDepreciation: pct("inrDepreciation"),
     safetyMargin: pct("safetyMargin"),
     passiveIncomeMonthly: num("passiveIncomeMonthly"),
     withdrawalRate: Math.max(0.001, pct("withdrawalRate")),
@@ -219,6 +229,7 @@ function collectState() {
 function calculateBase(state, withdrawalRateOverride) {
   const swr = withdrawalRateOverride || state.withdrawalRate;
   const years = state.yearsToTarget;
+  const generalUsdInflation = usdLifestyleInflation(state.generalInflation, state.inrDepreciation);
   const monthlyLifestyleToday = Object.values(state.expenses).reduce((sum, item) => sum + item, 0);
   const annualLifestyleToday = monthlyLifestyleToday * 12 + state.annualLargeExpenses;
   const adjustedLifestyleToday = annualLifestyleToday * (1 + state.safetyMargin);
@@ -230,13 +241,14 @@ function calculateBase(state, withdrawalRateOverride) {
   let monthlyLifestyleFuture = 0;
   Object.entries(state.expenses).forEach(([key, value]) => {
     const inflationKey = EXPENSE_INFLATION_MAP[key];
-    const inflation = inflationKey ? state[inflationKey] : state.generalInflation;
+    const inrInflation = inflationKey ? state[inflationKey] : state.generalInflation;
+    const inflation = usdLifestyleInflation(inrInflation, state.inrDepreciation);
     monthlyLifestyleFuture += value * Math.pow(1 + inflation, years);
   });
-  const annualLargeExpensesFuture = state.annualLargeExpenses * Math.pow(1 + state.generalInflation, years);
+  const annualLargeExpensesFuture = state.annualLargeExpenses * Math.pow(1 + generalUsdInflation, years);
   const annualLifestyleFuture = monthlyLifestyleFuture * 12 + annualLargeExpensesFuture;
   const adjustedLifestyleFuture = annualLifestyleFuture * (1 + state.safetyMargin);
-  const passiveIncomeAnnualFuture = passiveIncomeAnnualToday * Math.pow(1 + state.generalInflation, years);
+  const passiveIncomeAnnualFuture = passiveIncomeAnnualToday * Math.pow(1 + generalUsdInflation, years);
   const netAnnualNeedFuture = Math.max(0, adjustedLifestyleFuture - passiveIncomeAnnualFuture);
   const preTaxNeedFuture = netAnnualNeedFuture / (1 - state.withdrawalTax);
   const requiredCapitalFuture = preTaxNeedFuture / swr;
@@ -261,21 +273,24 @@ function calculateBase(state, withdrawalRateOverride) {
 }
 
 function calculateScenarioRows(state, base) {
+  const generalUsdInflation = usdLifestyleInflation(state.generalInflation, state.inrDepreciation);
+  const mixNominalReturn = getMixNominalReturn(state.allocation, state.assetReturns);
   const mixScenario = {
     key: "mix",
     name: "Your investment mix",
-    realReturn: getMixReturn(state.allocation, state.assetReturns)
+    nominalReturn: mixNominalReturn
   };
   return [mixScenario, ...SCENARIOS].map((scenario) => {
-    const afterTaxRealReturn = effectiveReturn(scenario.realReturn, state);
-    const nominalReturn = (1 + scenario.realReturn / 100) * (1 + state.generalInflation) - 1;
+    const realReturn = realReturnFromNominal(scenario.nominalReturn, generalUsdInflation);
+    const afterTaxRealReturn = effectiveReturn(realReturn * 100, state);
+    const nominalReturn = scenario.nominalReturn / 100;
     const pmtReal = requiredMonthlyContribution(
       base.requiredCapitalToday,
       state.currentAssets,
       afterTaxRealReturn,
       state.yearsToTarget
     );
-    const pmtFinalNominal = pmtReal * Math.pow(1 + state.generalInflation, state.yearsToTarget);
+    const pmtFinalNominal = pmtReal * Math.pow(1 + generalUsdInflation, state.yearsToTarget);
     const projectedReal = futureValueWithPmt(
       state.currentAssets,
       pmtReal,
@@ -285,6 +300,7 @@ function calculateScenarioRows(state, base) {
     const projectedNominal = projectedReal * Math.pow(1 + state.generalInflation, state.yearsToTarget);
     return {
       ...scenario,
+      realReturn,
       afterTaxRealReturn,
       nominalReturn,
       pmtReal,
@@ -336,12 +352,12 @@ function renderScenarioTable(state, rows) {
     return `
       <tr>
         <td><strong>${row.name}</strong><br>${alreadyFree}</td>
-        <td>${percent(row.realReturn)}</td>
+        <td>${percent(row.realReturn * 100)}</td>
         <td>${percent(row.nominalReturn * 100)}</td>
         <td>${percent(row.afterTaxRealReturn * 100)}<br><small>${returnLabel()}</small></td>
         <td><strong>${currency(row.pmtReal)}</strong></td>
         <td>${currency(row.pmtFinalNominal)}</td>
-        <td>${currency(row.projectedReal, true)} today<br><small>${currency(row.projectedNominal, true)} future rupees</small></td>
+        <td>${currency(row.projectedReal, true)} today<br><small>${currency(row.projectedNominal, true)} future dollars</small></td>
       </tr>
     `;
   }).join("");
@@ -352,30 +368,34 @@ function renderMainAnswer(state, rows) {
   document.getElementById("mainMonthlyContribution").textContent = currency(selected.pmtReal);
   document.getElementById("mainScenarioLabel").textContent = `Based on your investment mix, ${returnLabel()}`;
   document.getElementById("finalYearContribution").textContent = currency(selected.pmtFinalNominal);
-  document.getElementById("mixReturnDisplay").textContent = `${percent(selected.realReturn)} growth after price rise`;
+  document.getElementById("mixReturnDisplay").textContent = `${percent(selected.nominalReturn * 100)} USD growth`;
 
-  const yearOne = selected.pmtReal * Math.pow(1 + state.generalInflation, 1);
-  const halfway = selected.pmtReal * Math.pow(1 + state.generalInflation, state.yearsToTarget / 2);
+  const generalUsdInflation = usdLifestyleInflation(state.generalInflation, state.inrDepreciation);
+  const yearOne = selected.pmtReal * Math.pow(1 + generalUsdInflation, 1);
+  const halfway = selected.pmtReal * Math.pow(1 + generalUsdInflation, state.yearsToTarget / 2);
+  const finalYear = selected.pmtReal * Math.pow(1 + generalUsdInflation, state.yearsToTarget);
   renderDefinitionList("nominalContributionBreakdown", [
-    ["Invest monthly in today's rupees", currency(selected.pmtReal)],
-    ["Same value in year 1 rupees", currency(yearOne)],
+    ["Invest monthly in today's dollars", currency(selected.pmtReal)],
+    ["Same value in year 1 dollars", currency(yearOne)],
     ["Same value halfway there", currency(halfway)],
-    ["Same value in final-year rupees", currency(selected.pmtFinalNominal)]
+    ["Same value in final-year dollars", currency(finalYear)]
   ]);
 }
 
 function renderSensitivityTable(state, base) {
-  const returns = [1, 2, 3.5, 5, 6.5];
+  const returns = [4, 5.5, 7, 8.5, 10];
   const years = [5, 10, 15, 20, 25, 30];
+  const generalUsdInflation = usdLifestyleInflation(state.generalInflation, state.inrDepreciation);
   document.getElementById("sensitivityHead").innerHTML = `
     <tr>
       <th>Years</th>
-      ${returns.map((rate) => `<th>${percent(rate)} after price rise</th>`).join("")}
+      ${returns.map((rate) => `<th>${percent(rate)} USD growth</th>`).join("")}
     </tr>
   `;
   document.getElementById("sensitivityBody").innerHTML = years.map((year) => {
     const cells = returns.map((rate) => {
-      const adjustedRate = effectiveReturn(rate, state);
+      const realRate = realReturnFromNominal(rate, generalUsdInflation);
+      const adjustedRate = effectiveReturn(realRate * 100, state);
       const pmt = requiredMonthlyContribution(base.requiredCapitalToday, state.currentAssets, adjustedRate, year);
       return `<td>${currency(pmt)}</td>`;
     }).join("");
@@ -385,6 +405,7 @@ function renderSensitivityTable(state, base) {
 
 function drawProjectionChart(state, base, rows) {
   const selected = getMixRow(rows);
+  const generalUsdInflation = usdLifestyleInflation(state.generalInflation, state.inrDepreciation);
   const canvas = chartCanvas;
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
@@ -403,9 +424,9 @@ function drawProjectionChart(state, base, rows) {
   const years = Math.max(1, Math.round(state.yearsToTarget));
   for (let year = 0; year <= years; year += 1) {
     const real = futureValueWithPmt(state.currentAssets, selected.pmtReal, selected.afterTaxRealReturn, year);
-    const nominal = real * Math.pow(1 + state.generalInflation, year);
+    const nominal = real * Math.pow(1 + generalUsdInflation, year);
     const targetReal = base.requiredCapitalToday;
-    const targetNominal = base.requiredCapitalToday * Math.pow(1 + state.generalInflation, year);
+    const targetNominal = base.requiredCapitalToday * Math.pow(1 + generalUsdInflation, year);
     points.push({ year, real, nominal, targetReal, targetNominal });
   }
 
@@ -476,14 +497,22 @@ function drawProjectionChart(state, base, rows) {
 function renderAllocationMessage(state) {
   const total = getAllocationTotal(state.allocation);
   const message = document.getElementById("allocationMessage");
-  const mixReturn = getMixReturn(state.allocation, state.assetReturns);
+  const mixNominalReturn = getMixNominalReturn(state.allocation, state.assetReturns);
+  const generalUsdInflation = usdLifestyleInflation(state.generalInflation, state.inrDepreciation);
+  const mixAfterLifestyleInflation = realReturnFromNominal(mixNominalReturn, generalUsdInflation) * 100;
   if (Math.abs(total - 100) > 0.01) {
-    message.textContent = `Allocation total is ${percent(total)}. The calculator normalizes it and uses about ${percent(mixReturn)} yearly growth after price rise for "Your investment mix."`;
+    message.textContent = `Allocation total is ${percent(total)}. The calculator normalizes it and uses about ${percent(mixNominalReturn)} USD growth, or ${percent(mixAfterLifestyleInflation)} after India costs rise in dollars.`;
     message.classList.add("attention");
   } else {
-    message.textContent = `This mix is used in the main answer. It assumes about ${percent(mixReturn)} yearly growth after price rise, before the tax effect above.`;
+    message.textContent = `This mix is used in the main answer. It assumes about ${percent(mixNominalReturn)} USD growth, or ${percent(mixAfterLifestyleInflation)} after India costs rise in dollars.`;
     message.classList.remove("attention");
   }
+}
+
+function renderInflationMessage(state) {
+  const generalUsdInflation = usdLifestyleInflation(state.generalInflation, state.inrDepreciation);
+  const element = document.getElementById("usdInflationMessage");
+  element.textContent = `With ${percent(state.generalInflation * 100)} India price rise and ${percent(state.inrDepreciation * 100)} INR weakening per year, your general lifestyle cost rises about ${percent(generalUsdInflation * 100)} per year in dollars.`;
 }
 
 function renderTaxEstimate(state) {
@@ -503,6 +532,7 @@ function recalculate() {
   renderMainAnswer(state, rows);
   renderSensitivityTable(state, base);
   renderAllocationMessage(state);
+  renderInflationMessage(state);
   renderTaxEstimate(state);
   drawProjectionChart(state, base, rows);
 }
