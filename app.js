@@ -1,10 +1,10 @@
 const SCENARIOS = [
-  { key: "stress", name: "Stress", realReturn: -1 },
-  { key: "veryConservative", name: "Very conservative", realReturn: 1 },
-  { key: "conservative", name: "Conservative", realReturn: 2 },
-  { key: "balanced", name: "Balanced", realReturn: 3.5 },
-  { key: "growth", name: "Growth", realReturn: 5 },
-  { key: "aggressive", name: "Aggressive", realReturn: 6.5 }
+  { key: "stress", name: "Bad years", realReturn: -1 },
+  { key: "veryConservative", name: "Very low growth", realReturn: 1 },
+  { key: "conservative", name: "Low growth", realReturn: 2 },
+  { key: "balanced", name: "Middle growth", realReturn: 3.5 },
+  { key: "growth", name: "Good growth", realReturn: 5 },
+  { key: "aggressive", name: "Very good growth", realReturn: 6.5 }
 ];
 
 const EXPENSE_INFLATION_MAP = {
@@ -146,9 +146,9 @@ function effectiveReturn(realReturnPct, state) {
 }
 
 function returnLabel(state) {
-  if (state.returnTaxMode === "drag") return "after simplified tax drag";
-  if (state.returnTaxMode === "afterTax") return "already after tax";
-  return "pre-tax, not tax-adjusted";
+  if (state.returnTaxMode === "drag") return "after yearly tax effect";
+  if (state.returnTaxMode === "afterTax") return "tax already included";
+  return "before tax";
 }
 
 function collectState() {
@@ -265,11 +265,11 @@ function renderLifestyle(state, base) {
   renderDefinitionList("lifestyleBreakdown", [
     ["Monthly lifestyle cost today", currency(base.monthlyLifestyleToday)],
     ["Annual lifestyle cost today", currency(base.annualLifestyleToday)],
-    ["Safety-margin-adjusted cost", currency(base.adjustedLifestyleToday)],
-    ["Passive income deducted", currency(base.passiveIncomeAnnualToday)],
-    ["Net annual spending need", currency(base.netAnnualNeedToday)],
-    ["Tax-grossed withdrawal need", currency(base.preTaxNeedToday)],
-    ["Emergency fund kept separate", currency(state.emergencyFund)]
+    ["After adding your extra cushion", currency(base.adjustedLifestyleToday)],
+    ["Other income subtracted", currency(base.passiveIncomeAnnualToday)],
+    ["Yearly spending your investments must cover", currency(base.netAnnualNeedToday)],
+    ["Yearly amount before tax on withdrawals", currency(base.preTaxNeedToday)],
+    ["Emergency money kept separate", currency(state.emergencyFund)]
   ]);
 }
 
@@ -277,7 +277,7 @@ function renderWithdrawalTable(state) {
   const container = document.getElementById("withdrawalRateTable");
   container.innerHTML = [3, 3.5, 4].map((rate) => {
     const base = calculateBase(state, rate / 100);
-    return `<div class="mini-row"><span>${rate}% withdrawal rate</span><strong>${currency(base.requiredCapitalToday, true)}</strong></div>`;
+    return `<div class="mini-row"><span>If you spend ${rate}% per year</span><strong>${currency(base.requiredCapitalToday, true)}</strong></div>`;
   }).join("");
 }
 
@@ -293,7 +293,7 @@ function renderScenarioTable(state, rows) {
         <td>${percent(row.afterTaxRealReturn * 100)}<br><small>${returnLabel(state)}</small></td>
         <td><strong>${currency(row.pmtReal)}</strong></td>
         <td>${currency(row.pmtFinalNominal)}</td>
-        <td>${currency(row.projectedReal, true)} today<br><small>${currency(row.projectedNominal, true)} nominal</small></td>
+        <td>${currency(row.projectedReal, true)} today<br><small>${currency(row.projectedNominal, true)} future rupees</small></td>
       </tr>
     `;
   }).join("");
@@ -309,10 +309,10 @@ function renderMainAnswer(state, rows) {
   const yearOne = selected.pmtReal * Math.pow(1 + state.generalInflation, 1);
   const halfway = selected.pmtReal * Math.pow(1 + state.generalInflation, state.yearsToTarget / 2);
   renderDefinitionList("nominalContributionBreakdown", [
-    ["Required monthly contribution today", currency(selected.pmtReal)],
-    ["Nominal monthly contribution in year 1", currency(yearOne)],
-    ["Nominal monthly contribution halfway", currency(halfway)],
-    ["Nominal monthly contribution in final year", currency(selected.pmtFinalNominal)]
+    ["Invest monthly in today's rupees", currency(selected.pmtReal)],
+    ["Same value in year 1 rupees", currency(yearOne)],
+    ["Same value halfway there", currency(halfway)],
+    ["Same value in final-year rupees", currency(selected.pmtFinalNominal)]
   ]);
 }
 
@@ -322,7 +322,7 @@ function renderSensitivityTable(state, base) {
   document.getElementById("sensitivityHead").innerHTML = `
     <tr>
       <th>Years</th>
-      ${returns.map((rate) => `<th>${percent(rate)} real</th>`).join("")}
+      ${returns.map((rate) => `<th>${percent(rate)} after price rise</th>`).join("")}
     </tr>
   `;
   document.getElementById("sensitivityBody").innerHTML = years.map((year) => {
@@ -422,18 +422,18 @@ function drawProjectionChart(state, base, rows) {
   ctx.font = "700 13px system-ui, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText(`${selected.name} scenario projection`, pad.left, 8);
+  ctx.fillText(`${selected.name} projection`, pad.left, 8);
 }
 
-function renderAllocationWarning(state) {
+function renderAllocationMessage(state) {
   const total = Object.values(state.allocation).reduce((sum, item) => sum + item, 0);
-  const warning = document.getElementById("allocationWarning");
+  const message = document.getElementById("allocationMessage");
   if (Math.abs(total - 100) > 0.01) {
-    warning.textContent = `Allocation total is ${percent(total)}. Make it 100% for a cleaner planning assumption.`;
-    warning.classList.add("warning");
+    message.textContent = `Allocation total is ${percent(total)}. Make it 100% for a cleaner planning assumption.`;
+    message.classList.add("attention");
   } else {
-    warning.textContent = "Allocation totals 100%. Match the return scenario to this risk mix.";
-    warning.classList.remove("warning");
+    message.textContent = "Allocation totals 100%. Match the return case to this risk mix.";
+    message.classList.remove("attention");
   }
 }
 
@@ -446,7 +446,7 @@ function recalculate() {
   renderScenarioTable(state, rows);
   renderMainAnswer(state, rows);
   renderSensitivityTable(state, base);
-  renderAllocationWarning(state);
+  renderAllocationMessage(state);
   drawProjectionChart(state, base, rows);
 }
 

@@ -217,9 +217,27 @@ button:focus {
   font-size: 0.86rem;
 }
 
-.field-note.warning {
+.field-note.attention {
   color: #9a3d25;
   font-weight: 800;
+}
+
+.advanced-panel {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbf8f0;
+}
+
+.advanced-panel summary {
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.advanced-panel .two-column {
+  margin-top: 12px;
 }
 
 .compact-label {
@@ -419,15 +437,6 @@ canvas {
 
 .explain-grid .panel {
   padding: 18px;
-}
-
-.warning-list ul {
-  margin: 0;
-  padding-left: 18px;
-}
-
-.warning-list li + li {
-  margin-top: 8px;
 }
 
 footer {

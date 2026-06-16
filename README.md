@@ -1,237 +1,184 @@
 # Financial Freedom Calculator for India
 
-A free, public, beginner-friendly static calculator for people in India, with notes for West Bengal. It runs entirely in the browser using only HTML, CSS, and JavaScript. There is no backend, no login, no database, and no paid API.
+This is a free calculator that helps someone answer one simple question:
 
-The main idea is simple: users enter their desired lifestyle in today's rupees, and the calculator estimates how much capital they need and how much they must invest each month to reach financial freedom by a chosen age or number of years.
+**How much should I invest every month to become financially free by my target age?**
 
-## Files
+It is made for people in India and includes editable India tax assumptions. It works fully in the browser with only HTML, CSS, and JavaScript. There is no login, no database, no backend, and no paid service.
 
-- `index.html` - app structure and form fields
-- `style.css` - responsive layout and visual design
-- `app.js` - all calculations, tables, and chart drawing
+## How to Use It
 
-## What the Calculator Does
+Open `index.html` in a browser.
 
-The app calculates the financial freedom target from lifestyle expenses instead of asking the user to guess a target capital number.
+Enter everything in today's rupees.
 
-Inputs include:
+For example, if the life you want costs `₹80,000/month` today, enter `80000`. Do not try to guess what that life will cost 20 years from now. The calculator handles future price increases.
 
-- Current age
-- Target financial freedom age or years to target
-- Current invested assets
-- Emergency fund / cash buffer
-- Monthly lifestyle expenses in today's rupees
-- Optional annual large expenses in today's rupees
-- Rented or owned housing
-- General, housing, healthcare, and education inflation assumptions
-- Safety margin
-- Passive income at financial freedom
-- Safe withdrawal rate
-- Editable tax assumptions
-- Asset allocation
-- Return scenario
+Fill in:
 
-The dashboard shows:
+- Your current age
+- The age when you want financial freedom
+- Money already invested
+- Emergency money kept aside
+- Your monthly lifestyle costs today
+- Big yearly expenses today
+- Expected price rise
+- Extra cushion
+- Other monthly income you expect later
+- Basic investment and tax assumptions
 
-- Lifestyle calculation
-- Capital needed in today's rupees
-- Capital needed in future nominal rupees
-- Monthly contribution required in today's rupees
-- Future nominal contribution examples
-- Scenario table
-- Projection chart
-- Sensitivity table
-- Warnings and limitations
+The main answer is:
 
-## Key Principle
+**Invest this much each month, in today's rupees.**
 
-All user expense inputs are in today's rupees.
+## What the Calculator Shows
 
-Example: if the user wants a lifestyle worth `₹80,000/month` today, they enter `₹80,000`, even if financial freedom is 20 years away. The calculator handles inflation internally.
+The page shows:
 
-## Formulas Used
+- Your monthly lifestyle cost today
+- Your yearly lifestyle cost today
+- The yearly amount your investments must cover
+- The total money needed in today's rupees
+- The same target in future rupees
+- How much to invest each month under different return cases
+- A chart showing growth over time
+- A table showing what changes if you have more or less time
 
-### Lifestyle Cost
+## Today's Rupees and Future Rupees
 
-```text
-Annual lifestyle cost today =
-12 × monthly lifestyle expenses today
-+ annual large expenses today
-```
+The calculator separates two ideas:
+
+- **Today's rupees**: money in today's buying power. This is easier to understand.
+- **Future rupees**: the bigger-looking number after prices rise over time.
+
+The monthly investment answer is shown mainly in today's rupees, because that is the number a person can act on now.
+
+## Main Lifestyle Formula
 
 ```text
-Adjusted annual lifestyle cost today =
-Annual lifestyle cost today × (1 + safety margin)
+Yearly lifestyle cost today =
+12 × monthly lifestyle costs today
++ big yearly expenses today
 ```
+
+Then the calculator adds an extra cushion:
 
 ```text
-Net annual spending need today =
-Adjusted annual lifestyle cost today - annual passive income today
+Lifestyle cost with cushion =
+yearly lifestyle cost today × (1 + cushion %)
 ```
 
-If the value is negative, it is set to `0`.
-
-### Withdrawal Tax Gross-Up
-
-The user wants spendable money after taxes, so the calculator grosses up the withdrawal need:
+Then it subtracts other income:
 
 ```text
-Pre-tax annual withdrawal needed today =
-Net annual spending need today / (1 - effective withdrawal tax rate)
+Yearly amount investments must cover =
+lifestyle cost with cushion - other yearly income
 ```
 
-### Required Capital
+If this becomes negative, the calculator uses `0`.
+
+## Tax on Money Taken Out
+
+The calculator lets the user enter a simple tax percentage for money taken out of investments.
+
+If the user needs `₹12,00,000/year` after tax, and tax on withdrawals is `10%`, the investment must provide more than `₹12,00,000` before tax:
 
 ```text
-Required capital today =
-Pre-tax annual withdrawal needed today / safe withdrawal rate
+Yearly amount before tax =
+₹12,00,000 / (1 - 10%)
+= ₹13,33,333
 ```
+
+## Total Money Needed
+
+The calculator divides the yearly amount needed by the yearly spending rate from investments.
 
 Example:
 
 ```text
-Net lifestyle need = ₹12,00,000/year
-Effective withdrawal tax = 10%
-Safe withdrawal rate = 3.5%
+Yearly amount before tax = ₹13,33,333
+Yearly spending from investments = 3.5%
 
-Pre-tax need = 12,00,000 / 0.90 = ₹13,33,333
-Required capital = 13,33,333 / 0.035 = ₹3,80,95,238
+Money needed =
+₹13,33,333 / 3.5%
+= about ₹3.81 crore
 ```
 
-### Nominal Future Capital
+A lower yearly spending rate needs more money. A higher yearly spending rate needs less money.
 
-The app inflates future lifestyle needs to the target date. Housing, healthcare, and education can use separate inflation assumptions. Other expenses use general inflation.
+## Monthly Investment Formula
 
-It then applies the same safety margin, passive income deduction, withdrawal tax gross-up, and withdrawal rate to estimate future nominal capital.
-
-### Monthly Contribution
-
-The monthly investment answer is calculated in real terms, meaning today's rupees:
+The calculator first works in today's rupees.
 
 ```text
-FV_real = required capital today
-PV_real = current invested assets today
-r_real_monthly = (1 + annual real return)^(1/12) - 1
-n = years_to_target × 12
+Target money = money needed in today's rupees
+Starting money = money already invested
+Monthly return = (1 + yearly return after price rise)^(1/12) - 1
+Months = years to target × 12
 ```
 
-If `r_real_monthly` is not zero:
+Then it calculates the monthly investment needed to reach the target.
 
-```text
-PMT_real =
-(FV_real - PV_real × (1 + r_real_monthly)^n)
-/
-(((1 + r_real_monthly)^n - 1) / r_real_monthly)
-```
+If current investments are already enough under a return case, the monthly investment shown is `₹0`.
 
-If `r_real_monthly` is zero:
+## Return Cases
 
-```text
-PMT_real = (FV_real - PV_real) / n
-```
+The default return cases are shown after price rise:
 
-If the result is negative, the app displays `₹0` and notes that the current assets may already cover the target under that scenario.
+- Bad years: `-1%`
+- Very low growth: `1%`
+- Low growth: `2%`
+- Middle growth: `3.5%`
+- Good growth: `5%`
+- Very good growth: `6.5%`
 
-### Future Nominal Contributions
+The calculator also shows the same return in future-rupee terms by adding expected price rise.
 
-The main monthly contribution is shown in today's rupees. The app also shows equivalent nominal contribution examples:
+## India Tax Fields
 
-```text
-Monthly contribution in year k =
-PMT_real × (1 + inflation)^k
-```
+The tax fields are editable because tax depends on the exact investment and the rules can change.
 
-## Return Scenarios
+The app includes fields for:
 
-Default annual real returns are:
-
-- Stress: `-1%`
-- Very conservative: `1%`
-- Conservative: `2%`
-- Balanced: `3.5%`
-- Growth: `5%`
-- Aggressive: `6.5%`
-
-Nominal return is shown as:
-
-```text
-nominal return = (1 + real return) × (1 + inflation) - 1
-```
-
-## Tax Simplification
-
-Tax fields are editable. The calculator includes realistic India-oriented defaults, but it does not hard-code tax law as final truth.
-
-Editable fields include:
-
-- Equity short-term capital gains tax
-- Equity long-term capital gains tax
-- Equity LTCG exemption threshold
+- Equity short-term gains tax
+- Equity long-term gains tax
+- Equity gains amount ignored
 - Debt / fixed income tax
-- Dividend or slab tax
+- Dividend / income tax
 - Cess
 - Surcharge
-- Tax drag during accumulation
-- Effective withdrawal tax during withdrawal
+- Yearly tax effect while investing
+- Tax on money taken out
 
-The calculator uses a simplified tax model:
+For West Bengal, professional tax usually matters for salary, business, professional, or self-employment income. This calculator keeps it separate from investment withdrawals.
 
-- Effective withdrawal tax grosses up required withdrawals.
-- Annual tax drag can reduce real returns during accumulation.
-- Granular fields such as STCG, LTCG, debt tax, dividend tax, cess, and surcharge are included for user awareness and planning notes, but they are not a substitute for a detailed tax return calculation.
+## Deploy for Free with GitHub Pages
 
-For current rules, verify directly with the Income Tax Department and a tax professional. Useful official starting points:
-
-- Income Tax Department: <https://www.incometax.gov.in/>
-- West Bengal Profession Tax Directorate: <https://www.wbprofessiontax.gov.in/>
-
-West Bengal professional tax is not applied to the financial freedom withdrawal calculation by default. It is mainly relevant when modelling active salary, business, professional, or self-employment income.
-
-## How Inflation Is Applied
-
-The calculator separates real and nominal values:
-
-- Real values are in today's rupees.
-- Nominal values are future rupees after inflation.
-
-For future lifestyle estimates:
-
-- Housing uses housing inflation.
-- Healthcare uses healthcare inflation.
-- Education uses education inflation.
-- Other monthly expenses and annual large expenses use general inflation.
-- Passive income is inflated with general inflation.
-
-For future contribution examples, the calculator uses general inflation.
-
-## How to Deploy for Free on GitHub Pages
-
-1. Create a new public GitHub repository.
-2. Add these files to the repository root:
+1. Create a public GitHub repository.
+2. Upload these files to the repository:
    - `index.html`
    - `style.css`
    - `app.js`
    - `README.md`
-3. Commit and push the files.
-4. Open the repository on GitHub.
-5. Go to `Settings` → `Pages`.
-6. Under `Build and deployment`, choose:
+3. Open the repository on GitHub.
+4. Go to `Settings` -> `Pages`.
+5. Under `Build and deployment`, choose:
    - Source: `Deploy from a branch`
    - Branch: `main`
    - Folder: `/root`
-7. Click `Save`.
-8. GitHub will publish the site at a free GitHub Pages URL.
+6. Click `Save`.
+7. Wait for GitHub to build the page.
+8. Share the link GitHub gives you.
 
-## Limitations
+The link usually looks like:
 
-- This is a simplified planning calculator, not a financial plan.
-- It does not model every Indian tax rule, exemption, holding period, asset type, surcharge case, or future tax change.
-- It does not model changing expenses after retirement.
-- It does not model sequence-of-return risk in detail.
-- It assumes steady monthly contributions.
-- It assumes user-provided returns, inflation, withdrawal rate, and taxes.
-- It does not store data. Refreshing the page resets to defaults unless the browser keeps form values.
+```text
+https://your-username.github.io/your-repository-name/
+```
 
-## Disclaimer
+## Files
 
-This calculator is for education and rough planning only. It is not financial, tax, legal, or investment advice. Inflation and market returns are uncertain. Past returns do not guarantee future returns. Verify current Indian tax rules with official sources and consult a qualified professional before making financial decisions.
+- `index.html` contains the page.
+- `style.css` controls the design.
+- `app.js` contains the calculations and chart.
+- `README.md` explains the project.

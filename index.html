@@ -9,25 +9,21 @@
 <body>
   <header class="site-header">
     <div>
-      <p class="eyebrow">Free public calculator for India, with West Bengal notes</p>
-      <h1>Financial Freedom Calculator</h1>
-      <p class="lede">Enter your desired lifestyle in today's rupees. The calculator estimates the capital and monthly investment needed to reach financial freedom by your target age.</p>
+      <p class="eyebrow">Free public calculator for India</p>
+      <h1>How Much Should I Invest Each Month?</h1>
+      <p class="lede">Enter the life you want in today's rupees. The calculator estimates how much money you may need, and how much to invest each month to get there.</p>
     </div>
     <div class="header-card">
-      <span>All expense inputs are today's money value.</span>
-      <strong>Inflation is handled inside the calculator.</strong>
+      <span>Type costs as they feel today.</span>
+      <strong>The calculator handles future price increases for you.</strong>
     </div>
   </header>
 
   <main>
-    <section class="notice" aria-label="Important note">
-      <strong>Not financial advice.</strong> Taxes, inflation, returns, and withdrawal rates are simplified assumptions. Verify current Indian Income Tax Department rules and speak with a qualified adviser before acting.
-    </section>
-
     <div class="app-grid">
       <form class="panel inputs-panel" id="calculator-form">
         <div class="section-heading">
-          <h2>Your Details</h2>
+          <h2>1. Your Timeline</h2>
           <button class="text-button" type="button" id="reset-defaults">Reset defaults</button>
         </div>
 
@@ -37,11 +33,11 @@
             <input type="number" id="currentAge" min="0" max="100" value="25">
           </label>
           <label>
-            Target age
+            Age when you want freedom
             <input type="number" id="targetAge" min="1" max="120" value="45">
           </label>
           <label>
-            Years to target
+            Years from now
             <input type="number" id="yearsToTarget" min="1" max="60" value="20">
           </label>
           <label>
@@ -55,27 +51,27 @@
 
         <div class="two-column">
           <label>
-            Current invested assets
+            Money already invested
             <input type="number" id="currentAssets" min="0" step="1000" value="500000">
           </label>
           <label>
-            Emergency fund / cash buffer
+            Emergency money kept aside
             <input type="number" id="emergencyFund" min="0" step="1000" value="200000">
           </label>
         </div>
-        <p class="field-note">The emergency fund is shown separately and is not counted as invested capital by default.</p>
+        <p class="field-note">Emergency money is shown separately. It is not counted as invested money.</p>
 
         <div class="section-heading spaced">
-          <h2>Monthly Lifestyle Today</h2>
-          <span class="hint" title="Use today's purchasing power. If you want a lifestyle worth Rs 80,000/month today, enter Rs 80,000 even if your target is 20 years away.">?</span>
+          <h2>2. Monthly Life You Want Today</h2>
+          <span class="hint" title="Enter today's cost. For example, if the life you want costs Rs 80,000 per month today, enter 80000. Do not guess the future cost.">?</span>
         </div>
         <div class="expense-grid">
           <label>Housing / rent<input type="number" data-expense="housing" min="0" step="500" value="25000"></label>
           <label>Food and groceries<input type="number" data-expense="food" min="0" step="500" value="16000"></label>
-          <label>Utilities<input type="number" data-expense="utilities" min="0" step="500" value="5000"></label>
+          <label>Electricity, phone, internet<input type="number" data-expense="utilities" min="0" step="500" value="5000"></label>
           <label>Transport<input type="number" data-expense="transport" min="0" step="500" value="6000"></label>
           <label>Health insurance and healthcare<input type="number" data-expense="healthcare" min="0" step="500" value="6000"></label>
-          <label>Family / dependents<input type="number" data-expense="family" min="0" step="500" value="7000"></label>
+          <label>Family support<input type="number" data-expense="family" min="0" step="500" value="7000"></label>
           <label>Education<input type="number" data-expense="education" min="0" step="500" value="3000"></label>
           <label>Travel<input type="number" data-expense="travel" min="0" step="500" value="5000"></label>
           <label>Entertainment<input type="number" data-expense="entertainment" min="0" step="500" value="3000"></label>
@@ -83,106 +79,113 @@
         </div>
 
         <label class="wide-field">
-          Optional annual large expenses today
+          Big yearly expenses today
           <input type="number" id="annualLargeExpenses" min="0" step="1000" value="200000">
         </label>
 
         <div class="section-heading spaced">
-          <h2>Inflation and Lifestyle Buffer</h2>
-          <span class="hint" title="Inflation means prices rising over time. Real values remove inflation; nominal values are future rupees after inflation.">?</span>
+          <h2>3. Price Rise and Cushion</h2>
+          <span class="hint" title="Price rise means things may cost more in the future. The calculator shows today's rupees and future rupees separately.">?</span>
         </div>
         <div class="two-column">
-          <label>General inflation %<input type="number" id="generalInflation" step="0.1" value="6"></label>
-          <label>Rent / housing inflation %<input type="number" id="housingInflation" step="0.1" value="6.5"></label>
-          <label>Healthcare inflation %<input type="number" id="healthcareInflation" step="0.1" value="8"></label>
-          <label>Education inflation %<input type="number" id="educationInflation" step="0.1" value="8"></label>
-          <label>Safety margin %<input type="number" id="safetyMargin" min="0" step="1" value="20"></label>
-          <label>Passive income at freedom, monthly today<input type="number" id="passiveIncomeMonthly" min="0" step="1000" value="0"></label>
+          <label>Usual yearly price rise %<input type="number" id="generalInflation" step="0.1" value="6"></label>
+          <label>Rent / home cost rise %<input type="number" id="housingInflation" step="0.1" value="6.5"></label>
+          <label>Healthcare cost rise %<input type="number" id="healthcareInflation" step="0.1" value="8"></label>
+          <label>Education cost rise %<input type="number" id="educationInflation" step="0.1" value="8"></label>
+          <label>Extra cushion %<input type="number" id="safetyMargin" min="0" step="1" value="20"></label>
+          <label>Other monthly income at freedom<input type="number" id="passiveIncomeMonthly" min="0" step="1000" value="0"></label>
         </div>
 
         <div class="section-heading spaced">
-          <h2>Withdrawal and Tax</h2>
-          <span class="hint" title="Effective withdrawal tax is a simplified rate used to gross up withdrawals so your spending target is after tax. Tax drag is an annual reduction to returns during accumulation.">?</span>
+          <h2>4. Investment Assumptions</h2>
+          <span class="hint" title="These defaults are simple assumptions. You can change them if you know what you want to use.">?</span>
         </div>
         <div class="two-column">
-          <label>Safe withdrawal rate %<input type="number" id="withdrawalRate" min="0.1" step="0.1" value="3.5"></label>
-          <label>Effective withdrawal tax %<input type="number" id="withdrawalTax" min="0" max="95" step="0.1" value="10"></label>
-          <label>Annual tax drag %<input type="number" id="taxDrag" min="0" step="0.1" value="0.5"></label>
-          <label>Return tax setting
+          <label>Yearly spending from investments %<input type="number" id="withdrawalRate" min="0.1" step="0.1" value="3.5"></label>
+          <label>Tax on money taken out %<input type="number" id="withdrawalTax" min="0" max="95" step="0.1" value="10"></label>
+          <label>Yearly tax effect while investing %<input type="number" id="taxDrag" min="0" step="0.1" value="0.5"></label>
+          <label>How returns include tax
             <select id="returnTaxMode">
-              <option value="drag" selected>Apply simplified tax drag</option>
-              <option value="afterTax">Scenario returns are after tax</option>
-              <option value="preTax">Scenario returns are pre-tax</option>
+              <option value="drag" selected>Reduce returns by the tax effect above</option>
+              <option value="afterTax">Returns already include tax</option>
+              <option value="preTax">Returns do not include tax</option>
             </select>
           </label>
-          <label>Equity STCG %<input type="number" id="equityStcg" min="0" step="0.1" value="20"></label>
-          <label>Equity LTCG %<input type="number" id="equityLtcg" min="0" step="0.1" value="12.5"></label>
-          <label>Equity LTCG exemption<input type="number" id="equityLtcgExemption" min="0" step="1000" value="125000"></label>
-          <label>Debt / fixed income tax %<input type="number" id="debtTax" min="0" step="0.1" value="30"></label>
-          <label>Dividend / slab tax %<input type="number" id="dividendTax" min="0" step="0.1" value="30"></label>
-          <label>Cess %<input type="number" id="cess" min="0" step="0.1" value="4"></label>
-          <label>Surcharge %<input type="number" id="surcharge" min="0" step="0.1" value="0"></label>
         </div>
 
+        <details class="advanced-panel">
+          <summary>Optional tax details for India</summary>
+          <p class="field-note">These fields are editable because tax rules can change and depend on the exact investment.</p>
+          <div class="two-column">
+            <label>Equity short-term gains tax %<input type="number" id="equityStcg" min="0" step="0.1" value="20"></label>
+            <label>Equity long-term gains tax %<input type="number" id="equityLtcg" min="0" step="0.1" value="12.5"></label>
+            <label>Equity gains amount ignored<input type="number" id="equityLtcgExemption" min="0" step="1000" value="125000"></label>
+            <label>Debt / fixed income tax %<input type="number" id="debtTax" min="0" step="0.1" value="30"></label>
+            <label>Dividend / income tax %<input type="number" id="dividendTax" min="0" step="0.1" value="30"></label>
+            <label>Cess %<input type="number" id="cess" min="0" step="0.1" value="4"></label>
+            <label>Surcharge %<input type="number" id="surcharge" min="0" step="0.1" value="0"></label>
+          </div>
+        </details>
+
         <div class="section-heading spaced">
-          <h2>Asset Allocation</h2>
-          <span class="hint" title="These fields are informational in this simplified version. Use them to sanity-check whether the chosen return scenario matches your risk mix.">?</span>
+          <h2>5. Where the Money Is Invested</h2>
+          <span class="hint" title="This helps you choose a return scenario that matches your mix of equity, debt, and cash.">?</span>
         </div>
         <div class="allocation-grid">
           <label>Indian equity %<input type="number" data-allocation="indianEquity" min="0" step="1" value="55"></label>
           <label>International equity %<input type="number" data-allocation="internationalEquity" min="0" step="1" value="15"></label>
-          <label>Debt / fixed income %<input type="number" data-allocation="debt" min="0" step="1" value="25"></label>
+          <label>Debt / fixed deposits / bonds %<input type="number" data-allocation="debt" min="0" step="1" value="25"></label>
           <label>Cash %<input type="number" data-allocation="cash" min="0" step="1" value="5"></label>
         </div>
-        <p class="field-note" id="allocationWarning"></p>
+        <p class="field-note" id="allocationMessage"></p>
       </form>
 
       <aside class="panel results-panel">
         <div class="section-heading">
-          <h2>Main Answer</h2>
+          <h2>Your Answer</h2>
           <label class="compact-label">
-            Chart scenario
+            Return case
             <select id="chartScenario"></select>
           </label>
         </div>
 
         <div class="hero-result">
-          <span>Required monthly investment today</span>
+          <span>Invest this much each month, in today's rupees</span>
           <strong id="mainMonthlyContribution">₹0</strong>
           <small id="mainScenarioLabel">Balanced scenario</small>
         </div>
 
         <div class="metric-grid">
           <div class="metric">
-            <span>Capital needed today</span>
+            <span>Money needed in today's rupees</span>
             <strong id="requiredCapitalToday">₹0</strong>
           </div>
           <div class="metric">
-            <span>Capital needed at target date</span>
+            <span>Same target in future rupees</span>
             <strong id="requiredCapitalFuture">₹0</strong>
           </div>
           <div class="metric">
-            <span>Monthly lifestyle today</span>
+            <span>Your monthly lifestyle today</span>
             <strong id="monthlyLifestyleToday">₹0</strong>
           </div>
           <div class="metric">
-            <span>Final-year monthly investment</span>
+            <span>Monthly amount in final-year rupees</span>
             <strong id="finalYearContribution">₹0</strong>
           </div>
         </div>
 
         <div class="result-block">
-          <h3>Lifestyle Calculation</h3>
+          <h3>How Your Lifestyle Number Is Built</h3>
           <dl id="lifestyleBreakdown"></dl>
         </div>
 
         <div class="result-block">
-          <h3>Capital at Common Withdrawal Rates</h3>
+          <h3>If You Spend Different Amounts Each Year</h3>
           <div class="mini-table" id="withdrawalRateTable"></div>
         </div>
 
         <div class="result-block">
-          <h3>Nominal Contribution Examples</h3>
+          <h3>Same Monthly Investment in Future Rupees</h3>
           <dl id="nominalContributionBreakdown"></dl>
         </div>
       </aside>
@@ -190,20 +193,20 @@
 
     <section class="panel table-panel">
       <div class="section-heading">
-        <h2>Monthly Contribution by Scenario</h2>
-        <span class="hint" title="Real return is after inflation. Nominal return includes inflation. The monthly contribution column is in today's rupees.">?</span>
+        <h2>Monthly Investment Under Different Return Cases</h2>
+        <span class="hint" title="Today's-rupee return removes price rise. Future-rupee return includes price rise. The monthly investment column is today's money.">?</span>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Scenario</th>
-              <th>Real annual return</th>
-              <th>Nominal annual return</th>
-              <th>After-tax real return</th>
-              <th>Monthly today</th>
-              <th>Final-year nominal</th>
-              <th>Projected at target</th>
+              <th>Return after price rise</th>
+              <th>Return in future rupees</th>
+              <th>Return used</th>
+              <th>Invest monthly today</th>
+              <th>Final-year rupees</th>
+              <th>Money at target</th>
             </tr>
           </thead>
           <tbody id="scenarioTable"></tbody>
@@ -215,8 +218,8 @@
       <div class="section-heading">
         <h2>Projection Chart</h2>
         <div class="legend">
-          <span><i class="swatch real"></i>Real portfolio</span>
-          <span><i class="swatch nominal"></i>Nominal portfolio</span>
+          <span><i class="swatch real"></i>Today’s rupees</span>
+          <span><i class="swatch nominal"></i>Future rupees</span>
           <span><i class="swatch target"></i>Target</span>
         </div>
       </div>
@@ -225,8 +228,8 @@
 
     <section class="panel table-panel">
       <div class="section-heading">
-        <h2>Sensitivity Table</h2>
-        <span class="hint" title="Each value is the monthly investment required in today's rupees for the given years and real return.">?</span>
+        <h2>What If I Have More or Less Time?</h2>
+        <span class="hint" title="Each value is the monthly investment needed in today's rupees for that time and return case.">?</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -238,27 +241,21 @@
 
     <section class="explain-grid">
       <article class="panel">
-        <h2>Plain-Language Notes</h2>
-        <p><strong>Real values</strong> are in today's rupees, so they show purchasing power. <strong>Nominal future values</strong> are inflated rupees at the target date.</p>
-        <p><strong>Safe withdrawal rate</strong> is the percentage of your portfolio you assume you can withdraw each year. A lower rate needs more capital but gives a larger cushion.</p>
-        <p><strong>Tax drag</strong> is a simplified annual reduction to returns. It is not a legal tax calculation.</p>
+        <h2>How to Read This</h2>
+        <p><strong>Today's rupees</strong> means the value of money as you understand it now. This is the easiest number to think with.</p>
+        <p><strong>Future rupees</strong> means the larger-looking amount after prices have gone up over time.</p>
+        <p><strong>Yearly spending from investments</strong> means the part of your investment money you plan to use each year after reaching freedom. A smaller percentage needs a bigger fund.</p>
       </article>
-      <article class="panel warning-list">
-        <h2>Warnings</h2>
-        <ul>
-          <li>This is not financial advice.</li>
-          <li>Taxes are simplified and fully editable.</li>
-          <li>Inflation and returns are uncertain.</li>
-          <li>Past returns do not guarantee future returns.</li>
-          <li>Verify Indian tax rules with official sources or a tax professional.</li>
-          <li>West Bengal professional tax matters mainly for active income, salary, business income, or self-employment income.</li>
-        </ul>
+      <article class="panel">
+        <h2>Simple India Tax Note</h2>
+        <p>The tax inputs are editable because Indian tax rules depend on the investment type and can change. The defaults are only a practical starting point.</p>
+        <p>West Bengal professional tax is mainly for salary, business, professional, or self-employment income, so this calculator keeps it separate from investment withdrawals.</p>
       </article>
     </section>
   </main>
 
   <footer>
-    <p>Made as a zero-cost static calculator. It runs fully in your browser and stores nothing.</p>
+    <p>Runs fully in your browser and stores nothing.</p>
   </footer>
 
   <script src="app.js"></script>
